@@ -87,6 +87,14 @@ ggplot(aes(x = gmssugar, y = bmi), data = sugar.bmi.gdp) +
   theme_minimal()
 ```
 
+###Add Square Root of GDP
+
+When making charts in dimple, it appears as if the area of the bubbles for the GDP is not proportionate to GDP.  It looks like the RADIUS of the circles is, but that's not a good representation, since area of a circle is pi()*r^2.
+
+```{r sqrt}
+df_final$gdp.sqrt <- sqrt(df_final$gdp)
+```
+
 ###Write Data
 
 ```{r write data}
