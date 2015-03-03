@@ -1,4 +1,4 @@
-"Country","year","gmssugar","bmi","gdp","calories","Region","Digraph","gdp.sqrt"
+"Country","Year","Sugar Consumption","Body Mass Index","GDP Per Capita","Calories Per Day","Region","Digraph","GDP.sqrt"
 "Albania","1980",46.58,25.22533,1060.68460246494,2659.95,"Europe & Central Asia","AL",32.5681531939553
 "Albania","1981",46.58,25.23981,1099.51270187282,2747.51,"Europe & Central Asia","AL",33.1589007940978
 "Albania","1982",46.58,25.25636,1110.51226134227,2691.75,"Europe & Central Asia","AL",33.3243493761284

@@ -6,9 +6,11 @@
   <script src="http://dimplejs.org/dist/dimple.v2.1.2.min.js"></script>
   
   <style> 
-  	circle.dimple-series-1 {
-  		fill: red;
-  	}
+    h2 {
+      text-align: center;
+      font-family: Helvetica;
+      color: DarkBlue;
+    }
   </style>
     <script type="text/javascript">
       function draw(data) {
@@ -20,7 +22,8 @@
           "use strict";
           var margin = 75,
               width = 1300 - margin,
-              height = 600 - margin;
+              height = 600 - margin,
+              rightBar = 200;
 
 		  
           var svg = d3.select("body")
@@ -34,33 +37,161 @@
         Dimple.js Chart construction code
       */
 
-          data = dimple.filterData(data, "year", "2001");
+          data = dimple.filterData(data, "Year", ["1990", "1991", "1992", "1993", "1994", 
+                                                "1995", "1996", "1997", "1998", "1999",
+                                                "2000", "2001", "2002", "2003",
+                                                "2004", "2005", "2006", "2007"]);
+
+
+          // Create Year yearBars chart to the right of the main chart, and set colors
+          var yearBars = new dimple.chart(svg, data);
+          var defaultColor = yearBars.defaultColors[0];
+          var yearBarsColor = yearBars.defaultColors[4];
+
+          // frame animation duration in ms
+          var frame = 1500; 
+          var firstTick = true;
+
+          // put yearBars to the right of the main chart
+          yearBars.setBounds(width - rightBar, 50, 100, 430);
+
+          //Years along yearBars y-axis, in ascending order
+          var yBar_y = yearBars.addCategoryAxis("y", "Year");
+          yBar_y.addOrderRule("Year", "Asc");
+
+          //Length of bars will be proportional to total calories per day
+          var yBar_x = yearBars.addMeasureAxis("x", "Calories Per Day");
+          yBar_x.hidden = true;
+
+          var ybS = yearBars.addSeries(null, dimple.plot.bar);
+          ybS.addEventHandler("click", on_yBar_Click);
+
+          yearBars.draw();
+
+          //Remove the title and lines from the yearBars y-axis
+          yBar_y.titleShape.remove();
+          yBar_y.shapes.selectAll("line,path").remove();
+
+          //Move yBar_y-axis text into the bars
+          yBar_y.shapes.selectAll("text")
+              .style("text-anchor", "start")
+              .style("font-size", "11px")
+              .attr("transform", "translate(20, 0)");
+
+          // Add the yBars legend title
+          svg.selectAll("title_text")
+              .data(["Click a year bar to stop animation.",
+                    "Click again to resume."])
+              .enter()
+              .append('text')
+              .attr('x', width - rightBar + 2)
+              .attr('y', function (d, i) { return 25 + i * 12; })
+              .style("font-size", "11px")
+              .text(function (d) { return d; });
+
+          // Set the bar colors to start, starting with 1990
+          ybS.shapes
+              .attr("rx", 5)
+              .attr("ry", 5)
+              .style("fill", function (d) { return (d.y === "1990" ?
+                          yearBarsColor.fill : defaultColor.fill) })
+              .style("stroke", function (d) { return (d.y === "1990" ? 
+                          yearBarsColor.stroke : defaultColor.stroke) })
+              .style("opacity", 0.4);
 
           var myChart = new dimple.chart(svg, data);
-          //var x = myChart.addTimeAxis("x", "year"); 
-          var xAxis = myChart.addMeasureAxis("x", "gmssugar");
-          var yAxis = myChart.addMeasureAxis("y", "bmi");
-          var zAxis = myChart.addMeasureAxis("z", "gdp.sqrt");
 
-          yAxis.overrideMin = 18; //BMI axis does not need to go down to 0
+          myChart.setBounds(margin, 50, width - rightBar - margin - 20, height-margin);
+          var xAxis = myChart.addMeasureAxis("x", "Calories Per Day");
+          var yAxis = myChart.addMeasureAxis("y", "Body Mass Index");
+          var zAxis = myChart.addMeasureAxis("z", "GDP.sqrt");
 
-          xAxis.title = "Sugar Consumption (Grams Per Person Per Day)";
-          yAxis.title = "Average Body Mass Index (Men)"
-          zAxis.title = "GDP per capita"
-          myChart.addSeries(["gdp","year", "Country", "Region"], dimple.plot.bubble);
-          myChart.addLegend(750,20,500,20, "left")
+          //Show decimal value on mouse-over
+          xAxis.tickFormat = '.1f'; 
+          yAxis.tickFormat = '.1f';  
+
+          //fix the axes so they don't shift around so much during animation
+          xAxis.overrideMin = 1400;
+          xAxis.overrideMax = 4000;
+          yAxis.overrideMax = 30;
+          yAxis.overrideMin = 16; //BMI axis does not need to go down to 0
+
+          xAxis.title = "Food Consumption (Calories Per Person Per Day)";
+          yAxis.title = "Average Body Mass Index (Men)";
+          zAxis.title = "GDP per capita";
+
+          myChart.addSeries(["Country", "Region"], dimple.plot.bubble);
+          myChart.addLegend(550,20,500,20, "left");
+
+          // Add a storyboard to the chart, set tick control
+          var storyboard = myChart.setStoryboard("Year", on_yBar_Tick);
+          storyboard.frameDuration = frame;
+
           myChart.draw();
+          
+          //legends will refresh when storyboard ticks
+          myChart.legends = [];
+
+          //Remove storyboard label
+          storyboard.storyLabel.remove();
+
+          //function for the side yearBars chart
+          function on_yBar_Click(e) {
+            storyboard.pauseAnimation();
+            debugger;
+            // If selected already re-start the animation
+            if (e.yValue === storyboard.getFrameValue()) {
+                storyboard.startAnimation();
+            } else { // else pause and move to selected month
+                storyboard.goToFrame(e.yValue);
+                storyboard.pauseAnimation();
+            }
+          }
+
+          // function for when storyboard ticks
+          function on_yBar_Tick(e) {
+              if (!firstTick) {
+                  // color shapes the same
+                  ybS.shapes
+                        .transition()
+                        .duration(frame / 2)
+                        .style("fill", function (d) { return (d.y === e ?
+                              yearBarsColor.fill : defaultColor.fill) })
+                        .style("stroke", function(d) { return (d.y === e ?
+                              yearBarsColor.stroke : defaultColor.stroke) })
+              }
+              firstTick = false; 
+          }
+
+          
         };
       </script>
   </head>
 <body>
-  <h2>Sugar Consumption and BMI, 2001</h2>
+  <h2>Daily Food Supply and BMI, 1990-2007</h2>
+   <p>
+    <strong>Notes:</strong>
+    <br>
+    Data Source: <a href='www.gapminder.com'>gapminder.com</a>
+    <br>
+    Plot Bubble sizes are proportional to that country's Gross Domestic Product (GDP) per capita
+
+  </p>
   <script type="text/javascript">
   /*
     Use D3 (not dimple.js) to load the TSV file
     and pass the contents of it to the draw function
     */
-  d3.csv("./data/compcases_cals_sugar_bmi_gdp.csv", draw);
+  d3.csv("./data/calories_bmi_gdp.csv", function(d) {
+          //d['Sugar Consumption'] = +d["Sugar Consumption"];
+          d['Body Mass Index'] = +d["Body Mass Index"];
+          //d['Year'] = +d['Year'];
+          d['GDP.sqrt'] = +d['GDP.sqrt']; 
+          d['GDP Per Capita'] = +d['GDP Per Capita'];
+          d['Calories Per Day'] = +d['Calories Per Day'];
+          return d;
+        }, draw);
   </script>
+ 
 </body>
 </html>

@@ -1,4 +1,4 @@
-"Country","year","gmssugar","bmi","gdp","calories","Region","Digraph","gdp.sqrt"
+"Country","Year","Sugar Consumption","Body Mass Index","GDP Per Capita","Calories Per Day","Region","Digraph","GDP.sqrt"
 "Afghanistan","1980",NA,21.48678,NA,NA,"South Asia","AF",NA
 "Afghanistan","1981",NA,21.46552,NA,NA,"South Asia","AF",NA
 "Afghanistan","1982",NA,21.45145,NA,NA,"South Asia","AF",NA

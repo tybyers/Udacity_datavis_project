@@ -16,6 +16,7 @@ World Regions: https://spreadsheets.google.com/pub?key=phT4mwjvEuGBtdf1ZeO7_PQ&g
 ##References
 
 http://dimplejs.org/index.html
+ -- Especially Storyboard Control example:http://dimplejs.org/advanced_examples_viewer.html?id=advanced_storyboard_control
 
 Dimple wiki: https://github.com/PMSI-AlignAlytics/dimple/wiki
 

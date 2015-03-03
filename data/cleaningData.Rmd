@@ -28,8 +28,8 @@ sugar$A..1 <- NULL # strange last column
 sugar.t <- data.frame(t(sugar)) # Create a transposed data frame to be used later
 names(sugar)[1] <- 'Country' # Rename column 1 into "country"
 sugar.long <- melt(sugar, id.var = 'Country') # Melt into 3-variable dataframe
-names(sugar.long)[2] <- 'year' # Rename from "variable"
-names(sugar.long)[3] <- 'gmssugar' # Rename from "value"
+names(sugar.long)[2] <- 'Year' # Rename from "variable"
+names(sugar.long)[3] <- 'Sugar Consumption' # Rename from "value"
 ```
 
 ###Clean BMI Data
@@ -38,8 +38,8 @@ names(sugar.long)[3] <- 'gmssugar' # Rename from "value"
 colnames(bmi) <- substr(names(bmi), 2, 5)
 names(bmi)[1] <- 'Country'
 bmi.long <- melt(bmi, id.var = 'Country')
-names(bmi.long)[2] <- 'year'
-names(bmi.long)[3] <- 'bmi'
+names(bmi.long)[2] <- 'Year'
+names(bmi.long)[3] <- 'Body Mass Index'
 ```
 
 ###Clean GDP data
@@ -48,8 +48,8 @@ names(bmi.long)[3] <- 'bmi'
 names(gdp) <- substr(names(gdp), 2, 5)
 names(gdp)[1] <- 'Country'
 gdp.long <- melt(gdp, id.var = 'Country')
-names(gdp.long)[2] <- 'year'
-names(gdp.long)[3] <- 'gdp'
+names(gdp.long)[2] <- 'Year'
+names(gdp.long)[3] <- 'GDP Per Capita'
 ```
 
 ### Clean Calorie data
@@ -58,8 +58,8 @@ names(gdp.long)[3] <- 'gdp'
 names(cals) <- substr(names(cals), 2, 5)
 names(cals)[1] <- 'Country'
 cals.long <- melt(cals, id.var = 'Country')
-names(cals.long)[2] <- 'year'
-names(cals.long)[3] <- 'calories'
+names(cals.long)[2] <- 'Year'
+names(cals.long)[3] <- 'Calories Per Day'
 ```
 
 ### Clean Regions
@@ -76,23 +76,19 @@ sugar.bmi <- merge(sugar.long, bmi.long)
 sugar.bmi.gdp <- merge(sugar.bmi, gdp.long)
 cals.sugar.bmi.gdp <- merge(sugar.bmi.gdp, cals.long)
 df_final <- merge(cals.sugar.bmi.gdp, regions)
+cals.bmi <- merge(cals.long, bmi.long)
+cals.bmi.gdp <- merge(cals.bmi, gdp.long)
+cal_df_final <- merge(cals.bmi.gdp, regions)
 ```
 
-```{r gms_sugar plot}
-ggplot(aes(x = gmssugar, y = bmi), data = sugar.bmi.gdp) +
-  geom_jitter(alpha = 0.5, color = 'orange') + 
-  geom_smooth(method = 'lm', color = 'black') +
-  xlab('Daily Sugar (gm/person)') + ylab('Avg Male BMI')  +
-  ggtitle('Male BMI vs Sugar Consumption') +
-  theme_minimal()
-```
 
 ###Add Square Root of GDP
 
 When making charts in dimple, it appears as if the area of the bubbles for the GDP is not proportionate to GDP.  It looks like the RADIUS of the circles is, but that's not a good representation, since area of a circle is pi()*r^2.
 
 ```{r sqrt}
-df_final$gdp.sqrt <- sqrt(df_final$gdp)
+df_final$GDP.sqrt <- sqrt(df_final[,'GDP Per Capita'])
+cal_df_final$GDP.sqrt <- sqrt(cal_df_final[,'GDP Per Capita'])
 ```
 
 ###Write Data
@@ -103,5 +99,8 @@ write.csv(df_final, file = 'cals_sugar_bmi_gdp.csv', row.names = FALSE)
 # Write only data with complete cases
 write.csv(df_final[complete.cases(df_final),], 
           file = 'compcases_cals_sugar_bmi_gdp.csv', row.names = FALSE)
+# Write just cals data, complete cases only
+write.csv(cal_df_final[complete.cases(cal_df_final),],
+          file = 'calories_bmi_gdp.csv', row.names = FALSE)
 ```
 
