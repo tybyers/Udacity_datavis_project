@@ -65,8 +65,8 @@
           var firstTick = true;
 
           // put yearBars to the right of the main chart
-          yearBars.setBounds(width - rightBar - padding/2, padding, rightBar, 
-                          height - padding * 2);
+          yearBars.setBounds(width - rightBar - padding/2, 2 * padding + 10, rightBar, 
+                          height - padding * 3 - 10);
 
           //Years along yearBars y-axis, in ascending order
           var yBar_y = yearBars.addCategoryAxis("y", "Year");
@@ -105,14 +105,14 @@
 
           // Add the yBars legend title
           svg.selectAll("title_text")
-              .data(["Click a year bar to stop animation.",
-                    "Click again to resume."])
+              .data(["*Click year bar to pause.",
+                    "    Click again to resume."])
               .enter()
               .append('text')
-              .attr('x', width - rightBar - padding/2 - 10)
-              .attr('y', function (d, i) { return 30 + i * 12; })
-              .style("font-family", "sans-serif")
+              .attr('x', width - rightBar - padding/2)
+              .attr('y', function (d, i) { return 105 + i * 12; })
               .style("font-size", "10px")
+              .style("font-style", "italic")
               .text(function (d) { return d; });
 
           // Set the bar colors to start, starting with 1990
@@ -216,6 +216,20 @@
             .style("font-size", "10px")
             .style("font-family", "sans-serif")
             .text(function (d) { return d; });
+
+          //Add "Animation" legend
+          svg.selectAll("animationTitle")
+            .data(["Animation Control"])
+            .enter()
+            .append("text")
+            .attr("x", 810)
+            .attr("y", padding + 38)
+            .style("font-size", "14px")
+            .style("font-weight", "bold")
+            .style("color", "Black")
+            .style("font-family", "sans-serif")
+            .text(function (d) { return d; } );
+
 
           // Add a storyboard to the chart, set tick control
           var storyboard = myChart.setStoryboard("Year", on_yBar_Tick);
