@@ -3,13 +3,24 @@
 <head>
   <meta charset="utf-8">
   <script src="http://d3js.org/d3.v3.min.js"></script>
-  <script src="http://dimplejs.org/dist/dimple.v2.1.2.min.js"></script>
+  <script src="http://dimplejs.org/dist/dimple.v2.1.2.js"></script>
   
   <style> 
     h2 {
       text-align: center;
       font-family: Helvetica;
       color: DarkBlue;
+    }
+
+    svg {
+      outline-width: 1;
+      outline-color: gray;
+      
+
+    }
+
+    circle {
+      opacity: 0.6;
     }
   </style>
     <script type="text/javascript">
@@ -18,18 +29,19 @@
       /*
         D3.js setup code
       */
-
+          //Note: to use bl.ocks.org, must have svg fit within 960 x 500 pixels
           "use strict";
-          var margin = 75,
-              width = 1300 - margin,
-              height = 600 - margin,
-              rightBar = 200;
+          var padding = 55,
+              width = 960,
+              height = 500,
+              rightBar = width / 8,
+              legendheight = height/4;
 
 		  
           var svg = d3.select("body")
             .append("svg")
-              .attr("width", width + margin)
-              .attr("height", height + margin)
+              .attr("width", width)
+              .attr("height", height)
             .append('g')
                 .attr('class','chart');
 
@@ -37,11 +49,11 @@
         Dimple.js Chart construction code
       */
 
-          data = dimple.filterData(data, "Year", ["1990", "1991", "1992", "1993", "1994", 
-                                                "1995", "1996", "1997", "1998", "1999",
-                                                "2000", "2001", "2002", "2003",
-                                                "2004", "2005", "2006", "2007"]);
+          //debugger;
 
+          var yearfilter = d3.range(1990, 2008); // years 1990-2007 inclusive
+          yearfilter = yearfilter.toString().split(','); //needs to be a string
+          data = dimple.filterData(data, "Year", yearfilter);
 
           // Create Year yearBars chart to the right of the main chart, and set colors
           var yearBars = new dimple.chart(svg, data);
@@ -49,25 +61,38 @@
           var yearBarsColor = yearBars.defaultColors[4];
 
           // frame animation duration in ms
-          var frame = 1500; 
+          var frame = 2500; 
           var firstTick = true;
 
           // put yearBars to the right of the main chart
-          yearBars.setBounds(width - rightBar, 50, 100, 430);
+          yearBars.setBounds(width - rightBar - padding/2, padding, rightBar, 
+                          height - padding * 2);
 
           //Years along yearBars y-axis, in ascending order
           var yBar_y = yearBars.addCategoryAxis("y", "Year");
           yBar_y.addOrderRule("Year", "Asc");
 
+
           //Length of bars will be proportional to total calories per day
           var yBar_x = yearBars.addMeasureAxis("x", "Calories Per Day");
-          yBar_x.hidden = true;
+          
+          //yBar_x.overrideMin = 2000;
+          //yBar_x.overrideMax = 3000;
+          yBar_x.tickFormat = 'f';
+          yBar_x.ticks = 4;
+          yBar_x.title = 'Avg Calories per Day';
+          
 
           var ybS = yearBars.addSeries(null, dimple.plot.bar);
+          ybS.aggregate = dimple.aggregateMethod.avg; // Calories per day is average
           ybS.addEventHandler("click", on_yBar_Click);
 
           yearBars.draw();
 
+          //Do not need a tooltip to show up for hover over year bars
+          ybS.getTooltipText = function(e) {
+            return [];
+          }
           //Remove the title and lines from the yearBars y-axis
           yBar_y.titleShape.remove();
           yBar_y.shapes.selectAll("line,path").remove();
@@ -84,9 +109,10 @@
                     "Click again to resume."])
               .enter()
               .append('text')
-              .attr('x', width - rightBar + 2)
-              .attr('y', function (d, i) { return 25 + i * 12; })
-              .style("font-size", "11px")
+              .attr('x', width - rightBar - padding/2 - 10)
+              .attr('y', function (d, i) { return 30 + i * 12; })
+              .style("font-family", "sans-serif")
+              .style("font-size", "10px")
               .text(function (d) { return d; });
 
           // Set the bar colors to start, starting with 1990
@@ -101,13 +127,14 @@
 
           var myChart = new dimple.chart(svg, data);
 
-          myChart.setBounds(margin, 50, width - rightBar - margin - 20, height-margin);
+          myChart.setBounds(padding, 2*padding + 10, width - rightBar - 2 * padding, height- 3* padding - 10);
           var xAxis = myChart.addMeasureAxis("x", "Calories Per Day");
           var yAxis = myChart.addMeasureAxis("y", "Body Mass Index");
           var zAxis = myChart.addMeasureAxis("z", "GDP.sqrt");
 
+          
+          xAxis.tickFormat = 'f';
           //Show decimal value on mouse-over
-          xAxis.tickFormat = '.1f'; 
           yAxis.tickFormat = '.1f';  
 
           //fix the axes so they don't shift around so much during animation
@@ -120,36 +147,177 @@
           yAxis.title = "Average Body Mass Index (Men)";
           zAxis.title = "GDP per capita";
 
-          myChart.addSeries(["Country", "Region"], dimple.plot.bubble);
-          myChart.addLegend(550,20,500,20, "left");
+          var bubbleSeries = myChart.addSeries(["Country", "Region"], dimple.plot.bubble);
+
+          //Customize the tooltip from bubbleSeries
+          bubbleSeries.getTooltipText = function (e) {
+                //debugger;
+                return [
+                    "Country: " + e.aggField[0],
+                    "Region: " + e.aggField[1],
+                    "GDP Per Capita: $" + (e.zValue * e.zValue).toFixed(0),
+                    "Calories Per Day: " + (e.xValue).toFixed(0),
+                    "Avg Male BMI: " + (e.yValue).toFixed(1)
+                ];
+            };
+
+          //bubbleSeries.shapes
+           // .style("opacity", 0.5);
+
+          //Region legend title
+          svg.selectAll("regionLegendLabel")
+            .data(["Region:"])
+            .enter()
+            .append("text")
+              .attr("x", 20)
+              .attr("y", padding + 38 )
+              .style("font-size", "14px")
+              .style("font-weight", "bold")
+              .style("color", "Black")
+              .style("font-family", "sans-serif")
+              .text(function (d) { return d; });
+
+          //Region legend above chart
+          var myRegionLegend = myChart.addLegend(padding + 35, padding + 25,
+                            rightBar * 4,legendheight, "left");
+
+          svg.selectAll("regionLegendClickLabel")
+            .data(["*Click Region color box to show/hide regions"])
+            .enter()
+            .append("text")
+              .attr("x",90)
+              .attr("y", 113)
+              .style("font-size", "10px")
+              .style("font-style", "italic")
+              .text(function (d) { return d; });
+
+          //GDP Explanation title
+          svg.selectAll("GDPexplanationTitle")
+            .data(["GDP:"])
+            .enter()
+            .append("text")
+            .attr("x", 550)
+            .attr("y", padding + 38)
+            .style("font-size", "14px")
+            .style("font-weight", "bold")
+            .style("color", "Black")
+            .style("font-family", "sans-serif")
+            .text(function (d) { return d; } );
+
+          //GDP Explanation
+          svg.selectAll("GDPexplanation")
+            .data(["Plot bubble size is relative to Gross",
+              "Domestic Product (GDP) per capita, in ",
+              "$US, adjusted for inflation to year 2000."])
+            .enter()
+            .append("text")
+            .attr("x", 600)
+            .attr("y", function (d, i) { return padding + 28 + i * 12; })
+            .style("font-size", "10px")
+            .style("font-family", "sans-serif")
+            .text(function (d) { return d; });
 
           // Add a storyboard to the chart, set tick control
           var storyboard = myChart.setStoryboard("Year", on_yBar_Tick);
           storyboard.frameDuration = frame;
 
+
+
           myChart.draw();
           
+
           //legends will refresh when storyboard ticks
           myChart.legends = [];
+
+          //Unique list of regions
+          var regionVals = dimple.getUniqueValues(data, "Region");
+
+          myRegionLegend.shapes.selectAll("rect")
+            //Add a click event to each rectangle
+            .on("click", function (e)  {
+              //Is rectangle already visible?
+              var hideRect = false;
+              var newFilters = [];
+              //if filters contain clicked shape then hide it
+              regionVals.forEach(function (f) {
+                if (f === e.aggField.slice(-1)[0]) {
+                  hideRect = true;
+                } else {
+                  newFilters.push(f);
+                }
+              });
+              // Either hide the shape or show it now
+              if (hideRect) {
+                d3.select(this).style("opacity", 0.2);
+              } else {
+                newFilters.push(e.aggField.slice(-1)[0]);
+                d3.select(this).style("opacity", 0.8);
+              }
+              //Update our filters now
+              regionVals = newFilters;
+              //Filter the data by selected
+              myChart.data = dimple.filterData(data, "Region", regionVals);
+              myChart.draw(800);
+              if (!isticking) { // only keep animation paused if it is already paused
+                storyboard.pauseAnimation();
+              }
+              
+            });
+
 
           //Remove storyboard label
           storyboard.storyLabel.remove();
 
+          //Add Plot Title
+          svg.append("text")
+            .attr("x", 20)
+            .attr("y", 20)
+            .style("text-anchor", "left")
+            .style("font-family", "sans-serif")
+            .style("font-weight", "bold")
+            .text("As World Food Supply Increases, So Do Waistlines")
+
+          //Add Explanatory text
+
+          svg.selectAll("explanatory_text")
+            .data(["Between 1990 and 2007, daily caloric consumption increased for people in most countries throughout the world.  While hunger is still a problem in many parts ", 
+              "of the world, the overconsumption of food, especially in richer countries, is increasing the average body mass index (BMI) of people in these countries.",
+              "An unhealthy BMI is associated with health problems such as heart disease, cancer, and diabetes. Healthy male BMI should be between 18.5 and 24.9."])
+            .enter()
+            .append("text")
+              .attr("x", 20)
+              .attr("y", function(d, i) { return 40 + i *14; } )
+              .style("font-size", "11px")
+              .style("color", "Black")
+              .style("font-family", "sans-serif")
+              .text(function (d) { return d; });
+
+          //Add data source note
+          svg.append("text")
+            .attr("x", padding/4)
+            .attr("y", height - padding/4)
+            .style("font-family", "sans-serif")
+            .style("font-size", "10px")
+            .text("Data source: www.gapminder.org")
+
+          var isticking = true;  // variable to know if storyboard is ticking or not
           //function for the side yearBars chart
           function on_yBar_Click(e) {
             storyboard.pauseAnimation();
-            debugger;
             // If selected already re-start the animation
             if (e.yValue === storyboard.getFrameValue()) {
                 storyboard.startAnimation();
+                isticking = true;
             } else { // else pause and move to selected month
                 storyboard.goToFrame(e.yValue);
                 storyboard.pauseAnimation();
+                isticking = false;
             }
           }
 
           // function for when storyboard ticks
           function on_yBar_Tick(e) {
+
               if (!firstTick) {
                   // color shapes the same
                   ybS.shapes
@@ -168,15 +336,6 @@
       </script>
   </head>
 <body>
-  <h2>Daily Food Supply and BMI, 1990-2007</h2>
-   <p>
-    <strong>Notes:</strong>
-    <br>
-    Data Source: <a href='www.gapminder.com'>gapminder.com</a>
-    <br>
-    Plot Bubble sizes are proportional to that country's Gross Domestic Product (GDP) per capita
-
-  </p>
   <script type="text/javascript">
   /*
     Use D3 (not dimple.js) to load the TSV file
