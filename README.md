@@ -18,7 +18,7 @@ This repository contains the following project deliverables:
  * data/cleaningData.rmd -- R script I used for combining data sets and outputting the final data.
  * data/\*.xlsx -- Data sets downloaded from gapminder.org for this project.
 
- ##Summary
+##Summary
 
 This visualization is an animation that shows that people in most countries increased their daily caloric consumption, as well as average body mass index (BMI), between the years 1990 and 2007.  The visualization shows each country as a "bubble" on a scatterplot, where the size of the bubble is related to that country's Gross Domestic Product (GDP) per person.  From the chart, it is apparent that in general the richest countries have the highest daily consumption, as well as the highest BMI, and a careful eye may discern that the richest countries have increased their consumption the most over the 18 years.  In comparison, the poorest countries, especially those in Sub-Saharan Africa, appear to still be struggling with food supply, and may be getting left behind as the richer countries become more and more overweight.   
 
