@@ -61,6 +61,7 @@ A list of the changes I made to the visualization after receiving feedback is be
  * Put an explanatory paragraph between the title and the chart, so the user has an idea of what the chart is telling them.
  * Thought about my audience. Decided that my audience is readers of an online newspaper, who are reading an article talking about how each year more countries are dealing with problems related to an increasingly obese population, and food-supply/hunger is becoming less of a problem.  Hoping users will play with the chart to learn more.
  * Took Chris Saden's advice to change my code to create a list of the years 1990-2007 using Javascript rather than typing each year out by hand.
+ * Slowed the animation transition time from 1.5 sec to 2.5 seconds.  Charlie Turner said it moved a bit too fast for her liking.  Agree it's better a bit slower.
  
 ###Feedback not incorporated
 
